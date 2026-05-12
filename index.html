@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pilotage des Contrôles Fiscaux</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     ÉCRAN D'ACCUEIL / IMPORT
+════════════════════════════════════════════════════ -->
+<div id="welcome-screen">
+  <div class="welcome-inner">
+    <div class="welcome-logo">
+      <div class="logo-icon">⚖</div>
+      <h1>Contrôles Fiscaux</h1>
+      <p class="welcome-subtitle">Système de Pilotage Analytique</p>
+    </div>
+    <div class="upload-zone" id="upload-zone">
+      <div class="upload-icon">📁</div>
+      <h2>Importer un fichier</h2>
+      <p>Glissez-déposez votre fichier Excel ou CSV ici</p>
+      <p class="upload-hint">ou</p>
+      <label class="upload-btn" for="file-input">Choisir un fichier</label>
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
+      <p class="upload-formats">Formats acceptés : .xlsx · .xls · .csv</p>
+    </div>
+    <div class="offline-badge">🔒 Application 100% hors ligne · Aucune donnée envoyée</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     DASHBOARD PRINCIPAL
+════════════════════════════════════════════════════ -->
+<div id="dashboard" class="hidden">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-logo">⚖</div>
+      <div>
+        <h1 class="header-title">Pilotage des Contrôles Fiscaux</h1>
+        <p class="header-sub" id="header-file-info">–</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-date" id="header-date"></div>
+      <button class="btn-import" id="btn-reimport">
+        <span>↑</span> Nouveau fichier
+      </button>
+    </div>
+  </header>
+
+  <div class="app-body">
+
+    <!-- SIDEBAR FILTRES -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-icon">⚙</span>
+        <span>Filtres</span>
+        <button class="btn-reset-filters" id="btn-reset-filters" title="Réinitialiser">✕</button>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Type de contrôle</label>
+        <select id="f-type" class="filter-select" multiple>
+          <option value="">Tous</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Centre gestionnaire</label>
+        <select id="f-centre" class="filter-select" multiple>
+          <option value="">Tous</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Vérificateur</label>
+        <select id="f-verif" class="filter-select" multiple>
+          <option value="">Tous</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Statut</label>
+        <div class="filter-checks" id="f-statut">
+          <label class="check-label"><input type="checkbox" value="Clôturé" checked> Clôturé</label>
+          <label class="check-label"><input type="checkbox" value="En cours" checked> En cours</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Taxation d'Office</label>
+        <div class="filter-checks" id="f-to">
+          <label class="check-label"><input type="checkbox" value="oui" checked> Avec TO</label>
+          <label class="check-label"><input type="checkbox" value="non" checked> Sans TO</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Année vérifiée</label>
+        <select id="f-annee" class="filter-select">
+          <option value="">Toutes</option>
+        </select>
+      </div>
+
+      <div class="sidebar-stats">
+        <div class="stat-item">
+          <span class="stat-label">Dossiers filtrés</span>
+          <span class="stat-val" id="sidebar-count">–</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="main-content">
+
+      <!-- ONGLETS DE NAVIGATION -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="overview">📊 Vue d'ensemble</button>
+        <button class="tab-btn" data-tab="finance">💰 Analyse financière</button>
+        <button class="tab-btn" data-tab="delais">⏱ Délais</button>
+        <button class="tab-btn" data-tab="to">🔴 Taxation d'Office</button>
+        <button class="tab-btn" data-tab="tableau">📋 Tableau détaillé</button>
+      </nav>
+
+      <!-- ══════════════ VUE D'ENSEMBLE ══════════════ -->
+      <div id="tab-overview" class="tab-content active">
+
+        <!-- KPI CARDS ROW 1 -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-icon">📂</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="kpi-total">–</div>
+              <div class="kpi-lbl">Total contrôles</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="kpi-clotures">–</div>
+              <div class="kpi-lbl">Dossiers clôturés</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-icon">🔄</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="kpi-encours">–</div>
+              <div class="kpi-lbl">En cours</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-icon">📈</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="kpi-taux-cloture">–</div>
+              <div class="kpi-lbl">Taux de clôture</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-red">
+            <div class="kpi-icon">⚠️</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="kpi-to">–</div>
+              <div class="kpi-lbl">Taxations d'Office</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-teal">
+            <div class="kpi-icon">🎯</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="kpi-taux-to">–</div>
+              <div class="kpi-lbl">Taux de TO</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI FINANCIERS -->
+        <div class="kpi-grid kpi-grid-3">
+          <div class="kpi-card kpi-fin">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="kpi-np">–</div>
+              <div class="kpi-lbl">Montant Total NP</div>
+              <div class="kpi-sub">Principal + Amende</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-fin2">
+            <div class="kpi-icon">📜</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="kpi-nd">–</div>
+              <div class="kpi-lbl">Montant Total ND</div>
+              <div class="kpi-sub">Principal + Amende</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-fin3">
+            <div class="kpi-icon">📉</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="kpi-ecart">–</div>
+              <div class="kpi-lbl">Écart NP → ND</div>
+              <div class="kpi-sub">Variation moyenne</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">Répartition par type de contrôle</div>
+            <div class="chart-wrap"><svg id="chart-type-pie"></svg></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Répartition par statut</div>
+            <div class="chart-wrap"><svg id="chart-statut-pie"></svg></div>
+          </div>
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">Dossiers par vérificateur</div>
+            <div class="chart-wrap"><svg id="chart-verif-bar"></svg></div>
+          </div>
+        </div>
+
+        <!-- MATRICE KPI -->
+        <div class="matrix-section">
+          <div class="section-title">Matrice analytique — KPI par type de contrôle</div>
+          <div class="matrix-wrap" id="matrix-table"></div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════ ANALYSE FINANCIÈRE ══════════════ -->
+      <div id="tab-finance" class="tab-content hidden">
+        <div class="section-title">Analyse financière — NP vs ND</div>
+
+        <div class="kpi-grid kpi-grid-4">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="fin-np-ppal">–</div>
+              <div class="kpi-lbl">Principal NP</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-icon">⚡</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="fin-np-amd">–</div>
+              <div class="kpi-lbl">Amende NP</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-icon">📜</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="fin-nd-ppal">–</div>
+              <div class="kpi-lbl">Principal ND</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-icon">💥</div>
+            <div class="kpi-body">
+              <div class="kpi-val kpi-val-sm" id="fin-nd-amd">–</div>
+              <div class="kpi-lbl">Amende ND</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">Montants NP vs ND par dossier</div>
+            <div class="chart-wrap"><svg id="chart-np-nd-bar"></svg></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Principal vs Amende (NP)</div>
+            <div class="chart-wrap"><svg id="chart-np-split"></svg></div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">Écart NP → ND par dossier (%)</div>
+            <div class="chart-wrap"><svg id="chart-ecart-bar"></svg></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Principal vs Amende (ND)</div>
+            <div class="chart-wrap"><svg id="chart-nd-split"></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ DÉLAIS ══════════════ -->
+      <div id="tab-delais" class="tab-content hidden">
+        <div class="section-title">Analyse des délais de traitement</div>
+
+        <div class="kpi-grid kpi-grid-4">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-icon">⏱</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="del-moy">–</div>
+              <div class="kpi-lbl">Délai moyen (j)</div>
+              <div class="kpi-sub">NP → ND</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-icon">⚡</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="del-min">–</div>
+              <div class="kpi-lbl">Délai minimum (j)</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-red">
+            <div class="kpi-icon">🐢</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="del-max">–</div>
+              <div class="kpi-lbl">Délai maximum (j)</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-icon">⚠</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="del-retard">–</div>
+              <div class="kpi-lbl">Dossiers en retard</div>
+              <div class="kpi-sub">Plus de 60 jours</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">Aging des délais NP→ND</div>
+            <div class="chart-wrap"><svg id="chart-aging"></svg></div>
+          </div>
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">Délai NP→ND par dossier (jours)</div>
+            <div class="chart-wrap"><svg id="chart-delai-bar"></svg></div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">Délai total (création → ND) par dossier</div>
+            <div class="chart-wrap"><svg id="chart-delai-total-bar"></svg></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Délai moyen par vérificateur</div>
+            <div class="chart-wrap"><svg id="chart-delai-verif"></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ TAXATION D'OFFICE ══════════════ -->
+      <div id="tab-to" class="tab-content hidden">
+        <div class="section-title">Taxation d'Office — Analyse détaillée</div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-red">
+            <div class="kpi-icon">🔴</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="to-count">–</div>
+              <div class="kpi-lbl">Nombre de TO</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-icon">📊</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="to-taux">–</div>
+              <div class="kpi-lbl">Taux de TO</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-icon">🏢</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="to-centres">–</div>
+              <div class="kpi-lbl">Centres concernés</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-teal">
+            <div class="kpi-icon">👤</div>
+            <div class="kpi-body">
+              <div class="kpi-val" id="to-verifs">–</div>
+              <div class="kpi-lbl">Vérificateurs impliqués</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card chart-card-wide">
+            <div class="chart-title">TO par type de contrôle</div>
+            <div class="chart-wrap"><svg id="chart-to-type"></svg></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">TO vs Non-TO</div>
+            <div class="chart-wrap"><svg id="chart-to-pie"></svg></div>
+          </div>
+        </div>
+
+        <div class="matrix-section">
+          <div class="section-title">Dossiers avec Taxation d'Office</div>
+          <div class="table-wrap" id="to-table-wrap"></div>
+        </div>
+      </div>
+
+      <!-- ══════════════ TABLEAU DÉTAILLÉ ══════════════ -->
+      <div id="tab-tableau" class="tab-content hidden">
+        <div class="tableau-header">
+          <div class="section-title">Tableau détaillé des dossiers</div>
+          <div class="tableau-controls">
+            <input type="text" id="search-input" class="search-box" placeholder="🔍 Rechercher...">
+            <button class="btn-export" id="btn-export-csv">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap" id="detail-table-wrap"></div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast hidden" id="toast"></div>
+
+<!-- SCRIPTS LOCAUX -->
+<script src="libs/jszip.min.js"></script>
+<script src="libs/d3.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

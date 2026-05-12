@@ -1,0 +1,5 @@
+{
+    "powerquery.client.additionalSymbolsDirectories": [
+        "d:/Daniel/fiscal-dashboard/.vscode/excel-pq-symbols"
+    ]
+}
