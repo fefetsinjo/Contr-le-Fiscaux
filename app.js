@@ -941,7 +941,77 @@ function refreshAll() {
 }
 
 /* ─────────────────────────────────────────────────────────
-   16. CHARGEMENT DU FICHIER
+   16. GESTION SESSIONSTORAGE
+───────────────────────────────────────────────────────── */
+function saveDataToSession(fileName) {
+  try {
+    const sessionData = {
+      rawData: STATE.rawData,
+      fileName: fileName,
+      timestamp: new Date().toISOString(),
+    };
+    // Replacer pour convertir les Dates en format ISO
+    sessionStorage.setItem('fiscal_dashboard_data', JSON.stringify(sessionData, (key, value) => {
+      if (value instanceof Date) {
+        return { __isDate: true, value: value.toISOString() };
+      }
+      return value;
+    }));
+  } catch (e) {
+    console.warn('Impossible de sauvegarder en sessionStorage:', e);
+  }
+}
+
+function loadDataFromSession() {
+  try {
+    const data = sessionStorage.getItem('fiscal_dashboard_data');
+    if (!data) return null;
+    // Reviver pour reconvertir les Dates
+    return JSON.parse(data, (key, value) => {
+      if (value && value.__isDate) {
+        return new Date(value.value);
+      }
+      return value;
+    });
+  } catch (e) {
+    console.warn('Impossible de charger depuis sessionStorage:', e);
+    return null;
+  }
+}
+
+function clearSessionData() {
+  try {
+    sessionStorage.removeItem('fiscal_dashboard_data');
+  } catch (e) {
+    console.warn('Impossible de nettoyer sessionStorage:', e);
+  }
+}
+
+function restoreFromSession() {
+  const sessionData = loadDataFromSession();
+  if (!sessionData) return false;
+
+  try {
+    STATE.rawData = sessionData.rawData;
+    STATE.filteredData = [...STATE.rawData];
+
+    populateFilters();
+    document.getElementById('sidebar-count').textContent = STATE.rawData.length;
+    document.getElementById('header-file-info').textContent =
+      `${sessionData.fileName} · ${STATE.rawData.length} dossier${STATE.rawData.length > 1 ? 's' : ''}`;
+
+    showDashboard();
+    refreshAll();
+    return true;
+  } catch (e) {
+    console.error('Erreur lors de la restauration:', e);
+    clearSessionData();
+    return false;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   17. CHARGEMENT DU FICHIER
 ───────────────────────────────────────────────────────── */
 async function loadFile(file) {
   if (!file) return;
@@ -960,6 +1030,9 @@ async function loadFile(file) {
 
     STATE.rawData = enrichData(raw);
     STATE.filteredData = [...STATE.rawData];
+
+    // ✅ Sauvegarder en sessionStorage
+    saveDataToSession(file.name);
 
     populateFilters();
     document.getElementById('sidebar-count').textContent = STATE.rawData.length;
@@ -1004,6 +1077,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Date du jour dans le header
   document.getElementById('header-date').textContent =
     new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  // 🔄 Vérifier si des données sont en sessionStorage et les restaurer
+  if (!restoreFromSession()) {
+    // Si aucune donnée n'a pu être restaurée, afficher l'écran d'accueil
+    showWelcome();
+  }
 
   /* ── File input ── */
   const fileInput = document.getElementById('file-input');
