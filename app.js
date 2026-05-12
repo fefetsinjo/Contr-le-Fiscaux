@@ -1011,7 +1011,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Drag & Drop ── */
   const zone = document.getElementById('upload-zone');
-  zone.addEventListener('click', () => fileInput.click());
+  zone.addEventListener('click', (e) => {
+    // Éviter le double click si l'utilisateur a cliqué sur le label ou le file-input
+    if (e.target.tagName === 'LABEL' || e.target.tagName === 'INPUT' || e.target.closest('label[for="file-input"]')) {
+      return;
+    }
+    fileInput.click();
+  });
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
   zone.addEventListener('drop', e => {
